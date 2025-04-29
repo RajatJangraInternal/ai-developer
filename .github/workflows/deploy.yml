@@ -1,0 +1,59 @@
+name: Deploy Streamlit App to Azure using Credentials
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AZURE_WEBAPP_NAME: test-app-rajat-237w618723
+  AZURE_RESOURCE_GROUP: Agentic-AI-RG
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Azure CLI
+        uses: azure/setup-azurecli@v1
+
+      - name: Check if Web App exists
+        id: check_webapp
+        run: |
+          az webapp show --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || echo "Web App not found"
+
+      - name: Create Web App if not exists
+        if: steps.check_webapp.outcome == 'failure'
+        run: |
+          az login -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az webapp create --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --runtime "PYTHON|3.9"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          cd Python/src
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Make startup.sh executable
+        run: |
+          cd Python/src  
+          chmod +x startup.sh
+
+      - name: Zip the application
+        run: |
+          cd Python/src
+          zip -r app.zip . -x '*.git*'
+
+      - name: Deploy to Azure via Kudu API
+        run: |
+          curl -X POST "https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy" \
+          -u "${{ secrets.AZURE_USERNAME }}:${{ secrets.AZURE_PASSWORD }}" \
+          --data-binary @app.zip
