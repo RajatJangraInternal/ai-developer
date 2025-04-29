@@ -21,18 +21,12 @@ jobs:
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-      - name: Check if Web App exists
-        id: check_webapp
-        run: |
-          az login -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-          az webapp show --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || echo "Web App not found"
-        continue-on-error: true
-
       - name: Create Web App if not exists
-        if: ${{ steps.check_webapp.outcome == 'failure' || (steps.check_webapp.outputs.stdout && contains(steps.check_webapp.outputs.stdout, 'Web App not found')) }}
+        id: create_webapp
         run: |
           az login -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT_ID }}
           az webapp create --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --runtime "PYTHON|3.9"
+        continue-on-error: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
