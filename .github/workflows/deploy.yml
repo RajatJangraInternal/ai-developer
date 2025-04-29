@@ -64,3 +64,9 @@ jobs:
           curl -X POST "https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy" \
           -u "${{ secrets.AZURE_USERNAME }}:${{ secrets.AZURE_PASSWORD }}" \
           --data-binary @app.zip
+
+      - name: Configure startup command
+        run: |
+          az webapp config set --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --startup-file "Python/src/startup.sh"
