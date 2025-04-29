@@ -8,6 +8,7 @@ on:
 env:
   AZURE_WEBAPP_NAME: test-app-rajat-237w618723
   AZURE_RESOURCE_GROUP: Agentic-AI-RG
+  AZURE_APP_SERVICE_PLAN: test-app-rajat-237w618723
 
 jobs:
   deploy:
@@ -21,11 +22,11 @@ jobs:
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-      - name: Create Web App if not exists
+      - name: Create Web App
         id: create_webapp
         run: |
           az login -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-          az webapp create --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --runtime "PYTHON|3.9"
+          az webapp create --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --plan ${{ env.AZURE_APP_SERVICE_PLAN }} --runtime "PYTHON|3.9"
         continue-on-error: true
 
       - name: Set up Python
