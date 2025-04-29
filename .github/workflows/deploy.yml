@@ -28,7 +28,7 @@ jobs:
           az webapp show --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || echo "Web App not found"
 
       - name: Create Web App if not exists
-        if: steps.check_webapp.outcome == 'failure'
+        if: ${{ steps.check_webapp.outputs.stdout == 'Web App not found' }}
         run: |
           az login -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT_ID }}
           az webapp create --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --runtime "PYTHON|3.9"
